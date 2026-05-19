@@ -370,6 +370,63 @@
 
 
 
+# import discord
+# from discord.ext import commands
+# import asyncio
+# import os
+# from dotenv import load_dotenv
+
+# load_dotenv()
+
+# TOKEN = os.getenv("USER_TOKEN")
+# CHANNEL_ID = int(os.getenv("CHANNEL_ID"))
+
+# bot = commands.Bot(
+#     command_prefix="!",
+#     self_bot=True
+# )
+
+# @bot.event
+# async def on_ready():
+#     print(f"✅ Logged in as {bot.user}")
+
+#     channel = bot.get_channel(CHANNEL_ID)
+
+#     if not channel:
+#         print("❌ Channel not found")
+#         return
+
+#     while True:
+#         try:
+#             if not bot.voice_clients:
+#                 print("🎧 Joining VC...")
+
+#                 vc = await channel.connect(
+#                     reconnect=True,
+#                     self_mute=True,
+#                     self_deaf=False
+#                 )
+
+#                 print("✅ Connected successfully")
+
+#             await asyncio.sleep(300)
+
+#         except Exception as e:
+#             print("⚠️ Error:", e)
+
+#             try:
+#                 for vc in bot.voice_clients:
+#                     await vc.disconnect(force=True)
+#             except:
+#                 pass
+
+#             await asyncio.sleep(30)
+
+# bot.run(TOKEN)
+
+
+
+
 import discord
 from discord.ext import commands
 import asyncio
@@ -386,40 +443,69 @@ bot = commands.Bot(
     self_bot=True
 )
 
+# Prevent multiple loops
+vc_loop_started = False
+
+
 @bot.event
 async def on_ready():
+    global vc_loop_started
+
     print(f"✅ Logged in as {bot.user}")
 
-    channel = bot.get_channel(CHANNEL_ID)
+    if not vc_loop_started:
+        vc_loop_started = True
+        bot.loop.create_task(vc_loop())
 
-    if not channel:
-        print("❌ Channel not found")
-        return
 
-    while True:
+async def vc_loop():
+    await bot.wait_until_ready()
+
+    while not bot.is_closed():
         try:
-            if not bot.voice_clients:
-                print("🎧 Joining VC...")
+            channel = bot.get_channel(CHANNEL_ID)
 
-                vc = await channel.connect(
-                    reconnect=True,
-                    self_mute=True,
-                    self_deaf=False
-                )
+            if not channel:
+                print("❌ Channel not found")
+                await asyncio.sleep(30)
+                continue
 
-                print("✅ Connected successfully")
+            # Already connected?
+            if bot.voice_clients:
+                vc = bot.voice_clients[0]
 
-            await asyncio.sleep(300)
+                if vc.is_connected():
+                    print("🟢 Already connected to VC")
+                    await asyncio.sleep(120)
+                    continue
+
+            print("🎧 Attempting VC join...")
+
+            vc = await channel.connect(
+                reconnect=True,
+                timeout=60,
+                self_mute=True,
+                self_deaf=False
+            )
+
+            print("✅ Connected successfully")
+
+            # Stay alive loop
+            while vc.is_connected():
+                await asyncio.sleep(60)
 
         except Exception as e:
-            print("⚠️ Error:", e)
+            print(f"⚠️ VC ERROR: {e}")
 
+            # Force cleanup old sessions
             try:
-                for vc in bot.voice_clients:
-                    await vc.disconnect(force=True)
+                for old_vc in bot.voice_clients:
+                    await old_vc.disconnect(force=True)
             except:
                 pass
 
-            await asyncio.sleep(30)
+            print("♻️ Retrying in 20 seconds...")
+            await asyncio.sleep(20)
+
 
 bot.run(TOKEN)
