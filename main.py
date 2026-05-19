@@ -114,72 +114,151 @@
 
 
 
+# import discord
+# from discord.ext import commands
+# import asyncio
+# import random
+# import os
+# from dotenv import load_dotenv
+
+# # Local PC-r jonno .env load kora (Render e eita auto bypass hoye jabe)
+# load_dotenv()
+# USER_TOKEN = os.getenv("USER_TOKEN")
+# # String theke integer e convert korar aage check kora jate crash na khay
+# CHANNEL_ID = int(os.getenv("CHANNEL_ID")) if os.getenv("CHANNEL_ID") else 0
+
+# bot = commands.Bot(command_prefix="?", self_bot=True)
+
+# @bot.event
+# async def on_ready():
+#     print(f"✅ Successful Login! Automated User: {bot.user}")
+    
+#     # 🛠️ FIX: Reconnect hole jeno multiple loop toiri na hoy shetar protection
+#     if not hasattr(bot, 'loop_started'):
+#         print("🚀 ULTRA-DYNAMIC Stealth VC Loop Shuru holo...")
+#         bot.loop.create_task(stealth_vc_loop())
+#         bot.loop_started = True
+#     else:
+#         print("🔄 Gateway reconnected, loop already running.")
+
+# async def stealth_vc_loop():
+#     await bot.wait_until_ready()
+#     channel = bot.get_channel(CHANNEL_ID)
+
+#     while True:
+#         if not channel:
+#             print("❌ Channel khuje paowa jayni! Render Environment variable check koro.")
+#             await asyncio.sleep(60)
+#             continue
+
+#         try:
+#             print("🟢 Joining VC under stealth mode...")
+#             vc = await channel.connect(reconnect=True, timeout=None, self_mute=True, self_deaf=False)
+            
+#             session_hours = random.uniform(15.0, 65.0)
+#             session_seconds = int(session_hours * 3600)
+#             print(f"⏳ Dynamic Session targeted for {session_hours:.2f} hours. Staying active...")
+            
+#             await asyncio.sleep(session_seconds)
+            
+#             print("🔴 Session limits hit! Disconnecting for a human-like break...")
+#             if vc.is_connected():
+#                 await vc.disconnect()
+            
+#             break_seconds = random.randint(600, 2700)
+#             print(f"☕ Taking a random break for {break_seconds / 60:.2f} minutes...")
+#             await asyncio.sleep(break_seconds)
+
+#         except Exception as e:
+#             print(f"⚠️ Error Alert: {e}")
+#             for x in bot.voice_clients:
+#                 if x.guild.id == channel.guild.id:
+#                     await x.disconnect(force=True)
+            
+#             print("♻️ 1 Minute rest niye abar reconnect korbe...")
+#             await asyncio.sleep(60)
+
+# if __name__ == "__main__":
+#     if not USER_TOKEN or CHANNEL_ID == 0:
+#         print("❌ ERROR: USER_TOKEN ba CHANNEL_ID pawa jayni! .env ba Render setup check koro.")
+#     else:
+#         bot.run(USER_TOKEN)
+
+
+
+
+
+
 import discord
 from discord.ext import commands
 import asyncio
 import random
 import os
 from dotenv import load_dotenv
+from http.server import BaseHTTPRequestHandler, HTTPServer
+import threading
 
-# Local PC-r jonno .env load kora (Render e eita auto bypass hoye jabe)
 load_dotenv()
 USER_TOKEN = os.getenv("USER_TOKEN")
-# String theke integer e convert korar aage check kora jate crash na khay
 CHANNEL_ID = int(os.getenv("CHANNEL_ID")) if os.getenv("CHANNEL_ID") else 0
 
 bot = commands.Bot(command_prefix="?", self_bot=True)
 
+# 🌐 HACK: Render Free Tier Bypass Dummy Web Server
+class DummyServer(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
+        self.wfile.write(b"Bot is Alive and Running 24/7!")
+
+def run_dummy_server():
+    # Render automatic $PORT env variable provide kore
+    port = int(os.environ.get("PORT", 8080))
+    server = HTTPServer(("0.0.0.0", port), DummyServer)
+    print(f"🌍 Dummy Web Server started on port {port}")
+    server.serve_forever()
+
 @bot.event
 async def on_ready():
     print(f"✅ Successful Login! Automated User: {bot.user}")
-    
-    # 🛠️ FIX: Reconnect hole jeno multiple loop toiri na hoy shetar protection
     if not hasattr(bot, 'loop_started'):
         print("🚀 ULTRA-DYNAMIC Stealth VC Loop Shuru holo...")
         bot.loop.create_task(stealth_vc_loop())
         bot.loop_started = True
-    else:
-        print("🔄 Gateway reconnected, loop already running.")
 
 async def stealth_vc_loop():
     await bot.wait_until_ready()
     channel = bot.get_channel(CHANNEL_ID)
-
     while True:
         if not channel:
-            print("❌ Channel khuje paowa jayni! Render Environment variable check koro.")
+            print("❌ Channel khuje paowa jayni!")
             await asyncio.sleep(60)
             continue
-
         try:
             print("🟢 Joining VC under stealth mode...")
             vc = await channel.connect(reconnect=True, timeout=None, self_mute=True, self_deaf=False)
-            
             session_hours = random.uniform(15.0, 65.0)
             session_seconds = int(session_hours * 3600)
             print(f"⏳ Dynamic Session targeted for {session_hours:.2f} hours. Staying active...")
-            
             await asyncio.sleep(session_seconds)
-            
-            print("🔴 Session limits hit! Disconnecting for a human-like break...")
+            print("🔴 Session limits hit! Disconnecting...")
             if vc.is_connected():
                 await vc.disconnect()
-            
             break_seconds = random.randint(600, 2700)
-            print(f"☕ Taking a random break for {break_seconds / 60:.2f} minutes...")
+            print(f"☕ Taking a break for {break_seconds / 60:.2f} minutes...")
             await asyncio.sleep(break_seconds)
-
         except Exception as e:
             print(f"⚠️ Error Alert: {e}")
             for x in bot.voice_clients:
                 if x.guild.id == channel.guild.id:
                     await x.disconnect(force=True)
-            
-            print("♻️ 1 Minute rest niye abar reconnect korbe...")
             await asyncio.sleep(60)
 
 if __name__ == "__main__":
     if not USER_TOKEN or CHANNEL_ID == 0:
-        print("❌ ERROR: USER_TOKEN ba CHANNEL_ID pawa jayni! .env ba Render setup check koro.")
+        print("❌ ERROR: Config missing!")
     else:
+        # Pishone threading diye dummy server chalu kora jate loop block na hoy
+        threading.Thread(target=run_dummy_server, daemon=True).start()
         bot.run(USER_TOKEN)
